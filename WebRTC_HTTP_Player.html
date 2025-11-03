@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WebRTC Player</title>
+  <style>body{margin:0;background:#111;color:#eee;font-family:sans-serif} #wrap{max-width:900px;margin:24px auto;padding:12px} #player{width:100%;aspect-ratio:16/9;background:#000}</style>
+  <!-- OvenPlayer (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/ovenplayer/dist/ovenplayer.min.js"></script>
+</head>
+<body>
+  <div id="wrap">
+    <h3>WebRTC (OvenPlayer)</h3>
+    <div id="player"></div>
+  </div>
+
+  <script>
+    // Use WS (3333) for an HTTP page. For HTTPS pages use WSS (3334) instead (see Option 2).
+    // const SIGNALING_URL = "ws://rtmpservernlb-c62d007b0ea3d14c.elb.us-east-1.amazonaws.com:3333/app/stream";
+    const SIGNALING_URL = "wss://rtmpservernlb-c62d007b0ea3d14c.elb.us-east-1.amazonaws.com:3334/app/stream";
+
+
+    const player = OvenPlayer.create('player', {
+      autoStart: true,      // try to autoplay
+      mute: true,           // autoplay on mobile usually requires muted start
+      controls: true,
+      sources: [
+        { type: 'webrtc', file: SIGNALING_URL }
+      ]
+    });
+  </script>
+</body>
+</html>
