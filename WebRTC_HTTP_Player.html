@@ -4,30 +4,65 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebRTC Player</title>
-  <style>body{margin:0;background:#111;color:#eee;font-family:sans-serif} #wrap{max-width:900px;margin:24px auto;padding:12px} #player{width:100%;aspect-ratio:16/9;background:#000}</style>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; background:#0b0b0b; color:#eaeaea; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif }
+    .wrap { max-width:960px; margin:24px auto; padding:16px }
+    #player { width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden }
+    .row { margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+    input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid #333; background:#111; color:#eee }
+    button { padding:10px 14px; border-radius:10px; border:0; background:#3b82f6; color:#fff; cursor:pointer }
+    small { opacity:.7 }
+  </style>
   <!-- OvenPlayer (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/ovenplayer/dist/ovenplayer.min.js"></script>
 </head>
 <body>
-  <div id="wrap">
-    <h3>WebRTC (OvenPlayer)</h3>
+  <div class="wrap">
+    <h2>WebRTC Player (OvenPlayer)</h2>
     <div id="player"></div>
+
+    <div class="row">
+      <input id="sig" placeholder="WSS signaling URL (e.g. wss://...:3334/app/stream)" />
+      <input id="hls" placeholder="Optional HLS fallback (e.g. https://.../master.m3u8)" />
+      <button id="play">Play</button>
+    </div>
+    <small>
+      Tip: For pages served over <b>HTTPS</b>, use a <b>WSS</b> signaling URL (port 3334).  
+      For HTTP testing, you may use <b>WS</b> (3333).
+    </small>
   </div>
 
   <script>
-    // Use WS (3333) for an HTTP page. For HTTPS pages use WSS (3334) instead (see Option 2).
-    // const SIGNALING_URL = "ws://rtmpservernlb-c62d007b0ea3d14c.elb.us-east-1.amazonaws.com:3333/app/stream";
-    const SIGNALING_URL = "wss://rtmpservernlb-c62d007b0ea3d14c.elb.us-east-1.amazonaws.com:3334/app/stream";
+    // Read defaults from query params (?sig=...&hls=...)
+    const params = new URLSearchParams(location.search);
+    const sigDefault = params.get('sig') || "wss://rtmpservernlb-c62d007b0ea3d14c.elb.us-east-1.amazonaws.com:3334/app/stream";
+    const hlsDefault = params.get('hls') || "";
 
+    const sigInput = document.getElementById('sig');
+    const hlsInput = document.getElementById('hls');
+    sigInput.value = sigDefault;
+    hlsInput.value = hlsDefault;
 
-    const player = OvenPlayer.create('player', {
-      autoStart: true,      // try to autoplay
-      mute: true,           // autoplay on mobile usually requires muted start
-      controls: true,
-      sources: [
-        { type: 'webrtc', file: SIGNALING_URL }
-      ]
-    });
+    let player;
+    function makePlayer() {
+      const sources = [{ type: 'webrtc', file: sigInput.value.trim() }];
+      const hls = hlsInput.value.trim();
+      if (hls) sources.push({ type: 'hls', file: hls });
+
+      if (player) { try { player.remove(); } catch(e){} }
+      player = OvenPlayer.create('player', {
+        autoStart: true,  // try to autoplay
+        mute: true,       // mobile autoplay needs muted start
+        controls: true,
+        sources
+      });
+    }
+
+    document.getElementById('play').addEventListener('click', makePlayer);
+
+    // Auto-play on load with defaults
+    makePlayer();
   </script>
 </body>
 </html>
